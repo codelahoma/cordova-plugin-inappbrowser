@@ -85,7 +85,7 @@ public class InAppBrowser extends CordovaPlugin {
     private CallbackContext callbackContext;
     private boolean showLocationBar = true;
     private boolean openWindowHidden = false;
-    private String buttonLabel = "Done";
+  private String buttonLabel = "";
     private boolean clearAllCache= false;
     private boolean clearSessionCache=false;
 
@@ -570,8 +570,12 @@ public class InAppBrowser extends CordovaPlugin {
                 forward.setContentDescription("Close Button");
                 close.setId(5);
                 //close.setText(buttonLabel);
+        if ( buttonLabel.length() > 0 ) {
+          close.setText(buttonLabel);
+        } else {
                 int closeResId = activityRes.getIdentifier("ic_action_remove", "drawable", cordova.getActivity().getPackageName());
                 Drawable closeIcon = activityRes.getDrawable(closeResId);
+
                 if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
                 {
                     close.setBackgroundDrawable(closeIcon);
@@ -580,6 +584,8 @@ public class InAppBrowser extends CordovaPlugin {
                 {
                     close.setBackground(closeIcon);
                 }
+        }
+
                 close.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         closeDialog();
