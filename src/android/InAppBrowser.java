@@ -113,6 +113,7 @@ public class InAppBrowser extends CordovaPlugin {
   private static final int FORWARD_BUTTON_ID = 3;
   private static final int LOCATION_BOX_ID = 4;  
   private static final int CLOSE_BUTTON_ID = 5;
+  private static final int IN_APP_WEBVIEW_ID = 6;
   private static final int DEFAULT_TOOLBAR_COLOR = Color.LTGRAY;
   
   private InAppBrowserDialog dialog;
@@ -474,31 +475,7 @@ public class InAppBrowser extends CordovaPlugin {
     // Determine if we should hide the tool bar.
     showToolBar = true;
     openWindowHidden = false;
-    if (features != null) {
-      Boolean toolbar = features.get(TOOLBAR);
-      if (toolbar != null) {
-        showToolBar = toolbar.booleanValue();
-      }
-
-      Boolean location = features.get(LOCATION);
-      if (location != null) {
-        showLocationBar = location.booleanValue();
-      }
-
-      Boolean hidden = features.get(HIDDEN);
-      if (hidden != null) {
-        openWindowHidden = hidden.booleanValue();
-      }
-      Boolean cache = features.get(CLEAR_ALL_CACHE);
-      if (cache != null) {
-        clearAllCache = cache.booleanValue();
-      } else {
-        cache = features.get(CLEAR_SESSION_CACHE);
-        if (cache != null) {
-          clearSessionCache = cache.booleanValue();
-        }
-      }
-    }
+    setFeatureFlags(features);
 
     final CordovaWebView thatWebView = this.webView;
 
@@ -534,12 +511,6 @@ public class InAppBrowser extends CordovaPlugin {
         LinearLayout main = new LinearLayout(cordova.getActivity());
         main.setOrientation(LinearLayout.VERTICAL);
 
-
-
-        locationBox = buildLocationBox(url);
-
- 
-
         // WebView
         inAppWebView = new WebView(cordova.getActivity());
         inAppWebView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -569,7 +540,7 @@ public class InAppBrowser extends CordovaPlugin {
         }
 
         inAppWebView.loadUrl(url);
-        inAppWebView.setId(6);
+        inAppWebView.setId(IN_APP_WEBVIEW_ID);
         inAppWebView.getSettings().setLoadWithOverviewMode(true);
         inAppWebView.getSettings().setUseWideViewPort(true);
         inAppWebView.requestFocus();
@@ -639,65 +610,63 @@ public class InAppBrowser extends CordovaPlugin {
           dialog.hide();
         }
       }
+    };
+    this.cordova.getActivity().runOnUiThread(runnable);
+    return "";
+  }
 
-	private EditText buildLocationBox(final String url) {
-		locationBox = new EditText(cordova.getActivity());
-        RelativeLayout.LayoutParams textLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-        textLayoutParams.addRule(RelativeLayout.RIGHT_OF, NAV_BUTTON_CONTAINER_ID);
-        textLayoutParams.addRule(RelativeLayout.LEFT_OF, CLOSE_BUTTON_ID);
-        locationBox.setLayoutParams(textLayoutParams);
-        locationBox.setId(LOCATION_BOX_ID);
-        locationBox.setSingleLine(true);
-        locationBox.setText(url);
-        locationBox.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
-        locationBox.setImeOptions(EditorInfo.IME_ACTION_GO);
-        locationBox.setInputType(InputType.TYPE_NULL); // Will not except input... Makes the text NON-EDITABLE
-        locationBox.setOnKeyListener(new View.OnKeyListener() {
-          public boolean onKey(View v, int keyCode, KeyEvent event) {
-            // If the event is a key-down event on the "enter" button
-            if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
-              navigate(locationBox.getText().toString());
-              return true;
-            }
-            return false;
-          }
-        });
-		return locationBox;
-	}
+private void setFeatureFlags(HashMap<String, Boolean> features) {
+	if (features != null) {
+      Boolean toolbar = features.get(TOOLBAR);
+      if (toolbar != null) {
+        showToolBar = toolbar.booleanValue();
+      }
 
-	private Button buildCloseButton(Resources activityRes) {
-		// Close button
-        Button close = new Button(cordova.getActivity());
-        RelativeLayout.LayoutParams closeLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
-        closeLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-        close.setLayoutParams(closeLayoutParams);
-        close.setContentDescription("Close Button");
-        close.setId(CLOSE_BUTTON_ID);
-        if ( toolbarColor.length() > 0 ) {
-        	close.setBackgroundColor(Color.parseColor(toolbarColor));
-        } else {
-        	close.setBackgroundColor(DEFAULT_TOOLBAR_COLOR);
+      Boolean location = features.get(LOCATION);
+      if (location != null) {
+        showLocationBar = location.booleanValue();
+      }
+
+      Boolean hidden = features.get(HIDDEN);
+      if (hidden != null) {
+        openWindowHidden = hidden.booleanValue();
+      }
+      Boolean cache = features.get(CLEAR_ALL_CACHE);
+      if (cache != null) {
+        clearAllCache = cache.booleanValue();
+      } else {
+        cache = features.get(CLEAR_SESSION_CACHE);
+        if (cache != null) {
+          clearSessionCache = cache.booleanValue();
         }
-        
-  
-        if ( buttonLabel.length() > 0 ) {
-          close.setText(buttonLabel);
-          if (toolbarTextColor.length() > 0 ) {
-        	  close.setTextColor(Color.parseColor(toolbarTextColor));
-          }
-        } else {
-          int closeResId = activityRes.getIdentifier("ic_action_remove", "drawable", cordova.getActivity().getPackageName());
-          Drawable closeIcon = activityRes.getDrawable(closeResId);
+      }
+    }
+}
 
-          if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
-          {
-            close.setBackgroundDrawable(closeIcon);
-          }
-          else
-          {
-            close.setBackground(closeIcon);
-          }
+private EditText buildLocationBox(final String url) {
+	locationBox = new EditText(cordova.getActivity());
+    RelativeLayout.LayoutParams textLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+    textLayoutParams.addRule(RelativeLayout.RIGHT_OF, NAV_BUTTON_CONTAINER_ID);
+    textLayoutParams.addRule(RelativeLayout.LEFT_OF, CLOSE_BUTTON_ID);
+    locationBox.setLayoutParams(textLayoutParams);
+    locationBox.setId(LOCATION_BOX_ID);
+    locationBox.setSingleLine(true);
+    locationBox.setText(url);
+    locationBox.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+    locationBox.setImeOptions(EditorInfo.IME_ACTION_GO);
+    locationBox.setInputType(InputType.TYPE_NULL); // Will not except input... Makes the text NON-EDITABLE
+    locationBox.setOnKeyListener(new View.OnKeyListener() {
+      public boolean onKey(View v, int keyCode, KeyEvent event) {
+        // If the event is a key-down event on the "enter" button
+        if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+          navigate(locationBox.getText().toString());
+          return true;
         }
+        return false;
+      }
+    });
+	return locationBox;
+}
 
 private Button buildForwardButton(Resources activityRes) {
     Button forward = new Button(cordova.getActivity());
@@ -928,7 +897,7 @@ private RelativeLayout buildNavContainer(Resources activityRes) {
         newloc = "http://" + url;
       }
 
-      if (!newloc.equals(edittext.getText().toString())) {
+      if ( edittext != null ) {
         edittext.setText(newloc);
       }
 
