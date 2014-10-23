@@ -67,11 +67,13 @@ public class InAppBrowser extends CordovaPlugin {
 
 
 
-private static final String NULL = "null";
+  private static final String NULL = "null";
   protected static final String LOG_TAG = "InAppBrowser";
   private static final String SELF = "_self";
   private static final String SYSTEM = "_system";
   private static final String EXIT_EVENT = "exit";
+  
+  
 
   // option constants
   private static final String CLEAR_ALL_CACHE = "clearcache";
@@ -80,34 +82,39 @@ private static final String NULL = "null";
   private static final String HIDDEN = "hidden";
   private static final String LOCATION = "location";
   private static final String TOOLBAR = "toolbar";
+  private static final String TOOLBAR_POSITION = "toolbarposition";
   private static final String TOOLBAR_COLOR = "toolbarcolor";
   private static final String TOOLBAR_TEXT_COLOR = "toolbartextcolor";
   
+  // options vars/defaults
   
-  private static final String LOAD_ERROR_EVENT = "loaderror";
-  private static final String LOAD_START_EVENT = "loadstart";
-  private static final String LOAD_STOP_EVENT = "loadstop";
-
-  // layout constants
-  private static final int NAV_BUTTON_CONTAINER_INDEX = 1;
-  private static final int BACK_BUTTON_INDEX = 2;
-  private static final int FORWARD_BUTTON_INDEX = 3;
-  private static final int LOCATION_BOX_INDEX = 4;  
-  private static final int CLOSE_BUTTON_INDEX = 5;
-  private static final int DEFAULT_TOOLBAR_COLOR = Color.LTGRAY;
-  
-  private InAppBrowserDialog dialog;
-  private WebView inAppWebView;
-  private EditText locationBox;
-  private CallbackContext callbackContext;
   private boolean showToolBar = true;
   private boolean showLocationBar = true;
   private boolean openWindowHidden = false;
   private String buttonLabel = "";
   private String toolbarColor = "";
   private String toolbarTextColor = "";
+  private String toolbarPosition = "bottom";
   private boolean clearAllCache= false;
   private boolean clearSessionCache=false;
+  
+  private static final String LOAD_ERROR_EVENT = "loaderror";
+  private static final String LOAD_START_EVENT = "loadstart";
+  private static final String LOAD_STOP_EVENT = "loadstop";
+
+  // layout constants
+  private static final int NAV_BUTTON_CONTAINER_ID = 1;
+  private static final int BACK_BUTTON_ID = 2;
+  private static final int FORWARD_BUTTON_ID = 3;
+  private static final int LOCATION_BOX_ID = 4;  
+  private static final int CLOSE_BUTTON_ID = 5;
+  private static final int DEFAULT_TOOLBAR_COLOR = Color.LTGRAY;
+  
+  private InAppBrowserDialog dialog;
+  private WebView inAppWebView;
+  private EditText locationBox;
+  private CallbackContext callbackContext;
+  
 
   /**
    * Executes the request and returns PluginResult.
@@ -310,22 +317,22 @@ private static final String NULL = "null";
           
           switch (key.toLowerCase()) {
           case CLOSE_BUTTON_CAPTION:
-            this.buttonLabel = option.nextToken();
+        	  this.buttonLabel = option.nextToken();
         	  break;
           case TOOLBAR_COLOR:
-        	 this.toolbarColor = option.nextToken();
+        	  this.toolbarColor = option.nextToken();
         	  break;
           case TOOLBAR_TEXT_COLOR:
-        	 this.toolbarTextColor = option.nextToken();
+        	  this.toolbarTextColor = option.nextToken();
         	  break;
           default:
-            Boolean value = option.nextToken().equals("no") ? Boolean.FALSE : Boolean.TRUE;
+        	  Boolean value = option.nextToken().equals("no") ? Boolean.FALSE : Boolean.TRUE;
         	  optionMap.put(key, value);
         	  break;
           }
         	 
         	  
-        }
+         }
       }
       return optionMap;
     }
@@ -613,10 +620,10 @@ private static final String NULL = "null";
 	private EditText buildLocationBox(final String url) {
 		locationBox = new EditText(cordova.getActivity());
         RelativeLayout.LayoutParams textLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-        textLayoutParams.addRule(RelativeLayout.RIGHT_OF, NAV_BUTTON_CONTAINER_INDEX);
-        textLayoutParams.addRule(RelativeLayout.LEFT_OF, CLOSE_BUTTON_INDEX);
+        textLayoutParams.addRule(RelativeLayout.RIGHT_OF, NAV_BUTTON_CONTAINER_ID);
+        textLayoutParams.addRule(RelativeLayout.LEFT_OF, CLOSE_BUTTON_ID);
         locationBox.setLayoutParams(textLayoutParams);
-        locationBox.setId(LOCATION_BOX_INDEX);
+        locationBox.setId(LOCATION_BOX_ID);
         locationBox.setSingleLine(true);
         locationBox.setText(url);
         locationBox.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
@@ -642,7 +649,7 @@ private static final String NULL = "null";
         closeLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         close.setLayoutParams(closeLayoutParams);
         close.setContentDescription("Close Button");
-        close.setId(CLOSE_BUTTON_INDEX);
+        close.setId(CLOSE_BUTTON_ID);
         if ( toolbarColor.length() > 0 ) {
         	close.setBackgroundColor(Color.parseColor(toolbarColor));
         } else {
@@ -682,7 +689,7 @@ private static final String NULL = "null";
         navButtonContainer.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
         navButtonContainer.setHorizontalGravity(Gravity.LEFT);
         navButtonContainer.setVerticalGravity(Gravity.CENTER_VERTICAL);
-        navButtonContainer.setId(NAV_BUTTON_CONTAINER_INDEX);
+        navButtonContainer.setId(NAV_BUTTON_CONTAINER_ID);
         
         navButtonContainer.addView(buildForwardButton(activityRes));
         navButtonContainer.addView(buildBackButton(activityRes));
@@ -693,10 +700,10 @@ private static final String NULL = "null";
       private Button buildForwardButton(Resources activityRes) {
         Button forward = new Button(cordova.getActivity());
         RelativeLayout.LayoutParams forwardLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
-        forwardLayoutParams.addRule(RelativeLayout.RIGHT_OF, BACK_BUTTON_INDEX);
+        forwardLayoutParams.addRule(RelativeLayout.RIGHT_OF, BACK_BUTTON_ID);
         forward.setLayoutParams(forwardLayoutParams);
         forward.setContentDescription("Forward Button");
-        forward.setId(FORWARD_BUTTON_INDEX);
+        forward.setId(FORWARD_BUTTON_ID);
         //forward.setText(">");
         int fwdResId = activityRes.getIdentifier("ic_action_next_item", "drawable", cordova.getActivity().getPackageName());
         Drawable fwdIcon = activityRes.getDrawable(fwdResId);
@@ -722,8 +729,8 @@ private static final String NULL = "null";
         backLayoutParams.addRule(RelativeLayout.ALIGN_LEFT);
         back.setLayoutParams(backLayoutParams);
         back.setContentDescription("Back Button");
-        back.setId(BACK_BUTTON_INDEX);
-        back.setText("◀");
+        back.setId(BACK_BUTTON_ID);
+        back.setText("<");
 
         // int backResId = activityRes.getIdentifier("ic_action_previous_item", "drawable", cordova.getActivity().getPackageName());
         // Drawable backIcon = activityRes.getDrawable(backResId);
