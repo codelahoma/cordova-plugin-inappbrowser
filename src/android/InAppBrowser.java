@@ -303,33 +303,36 @@ public class InAppBrowser extends CordovaPlugin {
    * @param optString
    * @return
    */
-  private HashMap<String, Boolean> parseFeature(String optString) {
-    if (optString.equals(NULL)) {
-      return null;
-    } else {
-      HashMap<String, Boolean> map = new HashMap<String, Boolean>();
-      StringTokenizer features = new StringTokenizer(optString, ",");
-      StringTokenizer option;
-      while(features.hasMoreElements()) {
-        option = new StringTokenizer(features.nextToken(), "=");
-        if (option.hasMoreElements()) {
-          String key = option.nextToken();
-          if (key.equalsIgnoreCase(CLOSE_BUTTON_CAPTION)) {
-            this.buttonLabel = option.nextToken();
-          } else if (key.equalsIgnoreCase(TOOLBAR_COLOR)){
-        	 this.toolbarColor = option.nextToken();
-          } else if (key.equalsIgnoreCase(TOOLBAR_TEXT_COLOR)){
-        	 this.toolbarTextColor = option.nextToken();
-          } else{
-         
-            Boolean value = option.nextToken().equals("no") ? Boolean.FALSE : Boolean.TRUE;
-            map.put(key, value);
-          }
-        }
-      }
-      return map;
-    }
-  }
+	private HashMap<String, Boolean> parseFeature(String optString) {
+		if (optString.equals(NULL)) {
+			return null;
+		} else {
+			HashMap<String, Boolean> featureMap = new HashMap<String, Boolean>();
+			StringTokenizer features = new StringTokenizer(optString, ",");
+			StringTokenizer option;
+			while (features.hasMoreElements()) {
+				option = new StringTokenizer(features.nextToken(), "=");
+				if (option.hasMoreElements()) {
+					String key = option.nextToken();
+					if (key.equalsIgnoreCase(CLOSE_BUTTON_CAPTION)) {
+						this.buttonLabel = option.nextToken();
+					} else if (key.equalsIgnoreCase(TOOLBAR_COLOR)) {
+						this.toolbarColor = option.nextToken();
+					} else if (key.equalsIgnoreCase(TOOLBAR_TEXT_COLOR)) {
+						this.toolbarTextColor = option.nextToken();
+					} else if (key.equalsIgnoreCase(TOOLBAR_POSITION)) {
+						this.toolbarPosition = option.nextToken();
+					} else {
+
+						Boolean value = option.nextToken().equals("no") ? Boolean.FALSE
+								: Boolean.TRUE;
+						featureMap.put(key, value);
+					}
+				}
+			}
+			return featureMap;
+		}
+	}
 
   /**
    * Display a new browser with the specified URL.
