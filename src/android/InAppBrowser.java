@@ -81,22 +81,27 @@ public class InAppBrowser extends CordovaPlugin {
   private static final String CLOSE_BUTTON_CAPTION = "closebuttoncaption";
   private static final String HIDDEN = "hidden";
   private static final String LOCATION = "location";
+  private static final String TEXTUAL_NAV_BUTTONS = "textualnavbuttons";
   private static final String TOOLBAR = "toolbar";
   private static final String TOOLBAR_POSITION = "toolbarposition";
   private static final String TOOLBAR_COLOR = "toolbarcolor";
   private static final String TOOLBAR_TEXT_COLOR = "toolbartextcolor";
   
-  // options vars/defaults
+  // flag vars
   
   private boolean showToolBar = true;
   private boolean showLocationBar = true;
   private boolean openWindowHidden = false;
+  private boolean textualNavButtons = true;
+  private boolean clearAllCache= false;
+  private boolean clearSessionCache=false;
+  
+  // option vars 
+  
   private String buttonLabel = "";
   private String toolbarColor = "";
   private String toolbarTextColor = "";
   private String toolbarPosition = "bottom";
-  private boolean clearAllCache= false;
-  private boolean clearSessionCache=false;
   
   private static final String LOAD_ERROR_EVENT = "loaderror";
   private static final String LOAD_START_EVENT = "loadstart";
@@ -580,14 +585,23 @@ public class InAppBrowser extends CordovaPlugin {
           toolbar.addView(buildNavContainer(activityRes));
           //Please, no more black!
           if (toolbarColor.length() > 0) {
-        	  Button back = (Button) toolbar.findViewById(BACK_BUTTON_ID);
-        	  Button forward = (Button) toolbar.findViewById(FORWARD_BUTTON_ID);
-        	  int color = Color.parseColor(toolbarColor);
-        	  toolbar.setBackgroundColor(color);
-        	  back.setBackgroundColor(color);
-        	  forward.setBackgroundColor(color);
+        	  int bgColor = Color.parseColor(toolbarColor);
+        	  toolbar.setBackgroundColor(bgColor);
+        	  
+        	  if ( textualNavButtons ) {
+        		  Button back = (Button) toolbar.findViewById(BACK_BUTTON_ID);
+        		  Button forward = (Button) toolbar.findViewById(FORWARD_BUTTON_ID);
+        		  back.setBackgroundColor(bgColor);
+        		  forward.setBackgroundColor(bgColor);
+        		  
+        		  if ( toolbarTextColor.length() > 0 ) {
+        			  int textColor = Color.parseColor(toolbarTextColor);
+        			  back.setTextColor(textColor);
+        			  forward.setTextColor(textColor);
+        		  }
+        	  }
           } else {
-          toolbar.setBackgroundColor(DEFAULT_TOOLBAR_COLOR);
+        	  toolbar.setBackgroundColor(DEFAULT_TOOLBAR_COLOR);
           }
          
           if (getShowLocationBar()) {
@@ -677,85 +691,122 @@ public class InAppBrowser extends CordovaPlugin {
           }
         }
 
-        close.setOnClickListener(new View.OnClickListener() {
-          public void onClick(View v) {
-            closeDialog();
-          }
-        });
-		return close;
-	}
-
-      private RelativeLayout buildNavContainer(Resources activityRes) {
-        RelativeLayout navButtonContainer = new RelativeLayout(cordova.getActivity());
-        navButtonContainer.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-        navButtonContainer.setHorizontalGravity(Gravity.LEFT);
-        navButtonContainer.setVerticalGravity(Gravity.CENTER_VERTICAL);
-        navButtonContainer.setId(NAV_BUTTON_CONTAINER_ID);
-        
-        navButtonContainer.addView(buildForwardButton(activityRes));
-        navButtonContainer.addView(buildBackButton(activityRes));
-        
-        return navButtonContainer;
+private Button buildForwardButton(Resources activityRes) {
+    Button forward = new Button(cordova.getActivity());
+    RelativeLayout.LayoutParams forwardLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+    forwardLayoutParams.addRule(RelativeLayout.RIGHT_OF, BACK_BUTTON_ID);
+    forward.setLayoutParams(forwardLayoutParams);
+    forward.setContentDescription("Forward Button");
+    forward.setId(FORWARD_BUTTON_ID);
+    
+    if (textualNavButtons) {
+    	forward.setText(">");
+    } else {
+    	int fwdResId = activityRes.getIdentifier("ic_action_next_item", "drawable", cordova.getActivity().getPackageName());
+    	Drawable fwdIcon = activityRes.getDrawable(fwdResId);
+    	if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
+    	{
+    		forward.setBackgroundDrawable(fwdIcon);
+    	}
+    	else
+    	{
+    		forward.setBackground(fwdIcon);
+    	}
+    }
+    forward.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        goForward();
       }
-
-      private Button buildForwardButton(Resources activityRes) {
-        Button forward = new Button(cordova.getActivity());
-        RelativeLayout.LayoutParams forwardLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
-        forwardLayoutParams.addRule(RelativeLayout.RIGHT_OF, BACK_BUTTON_ID);
-        forward.setLayoutParams(forwardLayoutParams);
-        forward.setContentDescription("Forward Button");
-        forward.setId(FORWARD_BUTTON_ID);
-        //forward.setText(">");
-        int fwdResId = activityRes.getIdentifier("ic_action_next_item", "drawable", cordova.getActivity().getPackageName());
-        Drawable fwdIcon = activityRes.getDrawable(fwdResId);
-        if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
-        {
-          forward.setBackgroundDrawable(fwdIcon);
-        }
-        else
-        {
-          forward.setBackground(fwdIcon);
-        }
-        forward.setOnClickListener(new View.OnClickListener() {
-          public void onClick(View v) {
-            goForward();
-          }
-        });
-        return forward;
-      }
-
-      private Button buildBackButton(Resources activityRes) {
-        Button back = new Button(cordova.getActivity());
-        RelativeLayout.LayoutParams backLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
-        backLayoutParams.addRule(RelativeLayout.ALIGN_LEFT);
-        back.setLayoutParams(backLayoutParams);
-        back.setContentDescription("Back Button");
-        back.setId(BACK_BUTTON_ID);
-        back.setText("<");
-
-        // int backResId = activityRes.getIdentifier("ic_action_previous_item", "drawable", cordova.getActivity().getPackageName());
-        // Drawable backIcon = activityRes.getDrawable(backResId);
-        // if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
-        // {
-        //   back.setBackgroundDrawable(backIcon);
-        // }
-        // else
-        // {
-        //   back.setBackground(backIcon);
-        // }
-        back.setOnClickListener(new View.OnClickListener() {
-          public void onClick(View v) {
-            goBack();
-          }
-        });
-        return back;
-      }
-    };
-    this.cordova.getActivity().runOnUiThread(runnable);
-    return "";
+    });
+    return forward;
   }
 
-  /**
+private Button buildBackButton(Resources activityRes) {
+    Button back = new Button(cordova.getActivity());
+    RelativeLayout.LayoutParams backLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+    backLayoutParams.addRule(RelativeLayout.ALIGN_LEFT);
+    back.setLayoutParams(backLayoutParams);
+    back.setContentDescription("Back Button");
+    back.setId(BACK_BUTTON_ID);
+    
+    if ( textualNavButtons ) {
+    	back.setText("<");
+    } else {
+    	int backResId = activityRes.getIdentifier("ic_action_previous_item", "drawable", cordova.getActivity().getPackageName());
+    	Drawable backIcon = activityRes.getDrawable(backResId);
+    	if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
+    	{
+    		back.setBackgroundDrawable(backIcon);
+    	}
+    	else
+    	{
+    		back.setBackground(backIcon);
+    	}
+    }
+    back.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        goBack();
+      }
+    });
+    return back;
+  }
+
+private Button buildCloseButton(Resources activityRes) {
+	// Close button
+    Button close = new Button(cordova.getActivity());
+    RelativeLayout.LayoutParams closeLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
+    closeLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+    close.setLayoutParams(closeLayoutParams);
+    close.setContentDescription("Close Button");
+    close.setId(CLOSE_BUTTON_ID);
+    if ( toolbarColor.length() > 0 ) {
+    	close.setBackgroundColor(Color.parseColor(toolbarColor));
+    } else {
+    	close.setBackgroundColor(DEFAULT_TOOLBAR_COLOR);
+    }
+    
+
+    if ( buttonLabel.length() > 0 ) {
+      close.setText(buttonLabel);
+      if (toolbarTextColor.length() > 0 ) {
+    	  close.setTextColor(Color.parseColor(toolbarTextColor));
+      }
+    } else {
+      int closeResId = activityRes.getIdentifier("ic_action_remove", "drawable", cordova.getActivity().getPackageName());
+      Drawable closeIcon = activityRes.getDrawable(closeResId);
+
+      if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN)
+      {
+        close.setBackgroundDrawable(closeIcon);
+      }
+      else
+      {
+        close.setBackground(closeIcon);
+      }
+    }
+
+    close.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        closeDialog();
+      }
+    });
+	return close;
+}
+
+private RelativeLayout buildNavContainer(Resources activityRes) {
+    RelativeLayout navButtonContainer = new RelativeLayout(cordova.getActivity());
+    navButtonContainer.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+    navButtonContainer.setHorizontalGravity(Gravity.LEFT);
+    navButtonContainer.setVerticalGravity(Gravity.CENTER_VERTICAL);
+    navButtonContainer.setId(NAV_BUTTON_CONTAINER_ID);
+    
+    navButtonContainer.addView(buildForwardButton(activityRes));
+    navButtonContainer.addView(buildBackButton(activityRes));
+    
+    return navButtonContainer;
+  }
+
+/**
    * Create a new plugin success result and send it back to JavaScript
    *
    * @param obj a JSONObject contain event payload information
