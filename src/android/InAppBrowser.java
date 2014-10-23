@@ -567,12 +567,6 @@ public class InAppBrowser extends CordovaPlugin {
 
         if (getShowToolBar()) {
           toolbar = new RelativeLayout(cordova.getActivity());
-          //Please, no more black!
-          if (toolbarColor.length() > 0) {
-        	  toolbar.setBackgroundColor(android.graphics.Color.parseColor(toolbarColor));
-          } else {
-          toolbar.setBackgroundColor(DEFAULT_TOOLBAR_COLOR);
-          }
           
           toolbar.setLayoutParams(new RelativeLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, this.dpToPixels(44)));
@@ -584,6 +578,17 @@ public class InAppBrowser extends CordovaPlugin {
           
           
           toolbar.addView(buildNavContainer(activityRes));
+          //Please, no more black!
+          if (toolbarColor.length() > 0) {
+        	  Button back = (Button) toolbar.findViewById(BACK_BUTTON_ID);
+        	  Button forward = (Button) toolbar.findViewById(FORWARD_BUTTON_ID);
+        	  int color = Color.parseColor(toolbarColor);
+        	  toolbar.setBackgroundColor(color);
+        	  back.setBackgroundColor(color);
+        	  forward.setBackgroundColor(color);
+          } else {
+          toolbar.setBackgroundColor(DEFAULT_TOOLBAR_COLOR);
+          }
          
           if (getShowLocationBar()) {
         	  locationBox = buildLocationBox(url);
