@@ -79,6 +79,7 @@ public class InAppBrowser extends CordovaPlugin {
   private static final String CLEAR_ALL_CACHE = "clearcache";
   private static final String CLEAR_SESSION_CACHE = "clearsessioncache";
   private static final String CLOSE_BUTTON_CAPTION = "closebuttoncaption";
+  private static final String CLOSE_BUTTON_POSITION = "closebuttonposition";
   private static final String HIDDEN = "hidden";
   private static final String LOCATION = "location";
   private static final String TEXTUAL_NAV_BUTTONS = "textualnavbuttons";
@@ -102,6 +103,8 @@ public class InAppBrowser extends CordovaPlugin {
   private String toolbarColor = "";
   private String toolbarTextColor = "";
   private String toolbarPosition = "bottom";
+  private String closeButtonPosition = "right";
+
   
   private static final String LOAD_ERROR_EVENT = "loaderror";
   private static final String LOAD_START_EVENT = "loadstart";
@@ -328,6 +331,8 @@ public class InAppBrowser extends CordovaPlugin {
 						this.toolbarTextColor = option.nextToken();
 					} else if (key.equalsIgnoreCase(TOOLBAR_POSITION)) {
 						this.toolbarPosition = option.nextToken();
+					} else if (key.equalsIgnoreCase(CLOSE_BUTTON_POSITION)) {
+						this.closeButtonPosition = option.nextToken();
 					} else {
 
 						Boolean value = option.nextToken().equals("no") ? Boolean.FALSE
@@ -646,8 +651,16 @@ private void setFeatureFlags(HashMap<String, Boolean> features) {
 private EditText buildLocationBox(final String url) {
 	locationBox = new EditText(cordova.getActivity());
     RelativeLayout.LayoutParams textLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-    textLayoutParams.addRule(RelativeLayout.RIGHT_OF, NAV_BUTTON_CONTAINER_ID);
-    textLayoutParams.addRule(RelativeLayout.LEFT_OF, CLOSE_BUTTON_ID);
+
+    if ( closeButtonPosition.equalsIgnoreCase("left") ) {
+      textLayoutParams.addRule(RelativeLayout.RIGHT_OF, CLOSE_BUTTON_ID);
+      textLayoutParams.addRule(RelativeLayout.LEFT_OF, NAV_BUTTON_CONTAINER_ID);
+    } else {
+      textLayoutParams.addRule(RelativeLayout.RIGHT_OF, NAV_BUTTON_CONTAINER_ID);
+      textLayoutParams.addRule(RelativeLayout.LEFT_OF, CLOSE_BUTTON_ID);
+    }
+
+
     locationBox.setLayoutParams(textLayoutParams);
     locationBox.setId(LOCATION_BOX_ID);
     locationBox.setSingleLine(true);
@@ -731,8 +744,15 @@ private Button buildBackButton(Resources activityRes) {
 private Button buildCloseButton(Resources activityRes) {
 	// Close button
     Button close = new Button(cordova.getActivity());
+
     RelativeLayout.LayoutParams closeLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
-    closeLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+
+    if ( closeButtonPosition.equalsIgnoreCase("left") ) {
+      closeLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+    } else {
+      closeLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+    }
+
     close.setLayoutParams(closeLayoutParams);
     close.setContentDescription("Close Button");
     close.setId(CLOSE_BUTTON_ID);
@@ -772,9 +792,20 @@ private Button buildCloseButton(Resources activityRes) {
 
 private RelativeLayout buildNavContainer(Resources activityRes) {
     RelativeLayout navButtonContainer = new RelativeLayout(cordova.getActivity());
-    navButtonContainer.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+    RelativeLayout.LayoutParams navContainerLayoutParams = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+    
+    if ( closeButtonPosition.equalsIgnoreCase("left") ) {
+      navContainerLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+    } else {
+      navContainerLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+    }
+
+    navButtonContainer.setLayoutParams(navContainerLayoutParams);
+
+    
     navButtonContainer.setHorizontalGravity(Gravity.LEFT);
     navButtonContainer.setVerticalGravity(Gravity.CENTER_VERTICAL);
+    
     navButtonContainer.setId(NAV_BUTTON_CONTAINER_ID);
     
     navButtonContainer.addView(buildForwardButton(activityRes));
